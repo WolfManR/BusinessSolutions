@@ -1,0 +1,8 @@
+# vs cache
+.vs/
+*.user*
+bin/
+obj/
+
+# databases
+*.db
