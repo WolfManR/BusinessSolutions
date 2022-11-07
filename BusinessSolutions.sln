@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orders.Api", "Orders.Api\Or
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orders.Data", "Orders.Data\Orders.Data.csproj", "{809BC4DB-4981-4BB8-8715-941F071DA04B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orders.Data.Migrations", "Orders.Data.Migrations\Orders.Data.Migrations.csproj", "{4E2DADF3-4A91-4E44-ADE6-CC28459BDEE8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{809BC4DB-4981-4BB8-8715-941F071DA04B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{809BC4DB-4981-4BB8-8715-941F071DA04B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{809BC4DB-4981-4BB8-8715-941F071DA04B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E2DADF3-4A91-4E44-ADE6-CC28459BDEE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E2DADF3-4A91-4E44-ADE6-CC28459BDEE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E2DADF3-4A91-4E44-ADE6-CC28459BDEE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E2DADF3-4A91-4E44-ADE6-CC28459BDEE8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
