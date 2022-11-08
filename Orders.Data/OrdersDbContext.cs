@@ -12,6 +12,10 @@ public class OrdersDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // string properties with type nvarchar(max) or varchar(max) cannot be indexed
+        // possible solution to make hash properties, that will store checksum values and
+        // its will be used in indexes with type nvarchar(450) as required by ef
+
         modelBuilder.Entity<Order>(b =>
         {
             // Orders has OrderItems
@@ -26,10 +30,10 @@ public class OrdersDbContext : DbContext
             b.Property(x => x.Number).HasMaxLength(int.MaxValue);
 
             // Order Number and ProviderId is unique constraint
-            b.HasIndex(x => new { x.ProviderId, x.Number }).IsUnique();
+            //b.HasIndex(x => new { x.ProviderId, x.Number }).IsUnique();
 
             // Order Number, Date, ProviderId is indexed
-            b.HasIndex(x => x.Number);
+            //b.HasIndex(x => x.Number);
             b.HasIndex(x => x.Date);
         });
 
@@ -46,8 +50,8 @@ public class OrdersDbContext : DbContext
             // may be handled by https://www.nuget.org/packages/EFCore.CheckConstraints nuget package extension
 
             // Name, Unit is indexed
-            b.HasIndex(x => x.Name);
-            b.HasIndex(x => x.Unit);
+            //b.HasIndex(x => x.Name);
+            //b.HasIndex(x => x.Unit);
         });
 
         modelBuilder.Entity<Provider>(b =>
@@ -56,7 +60,7 @@ public class OrdersDbContext : DbContext
             b.Property(x => x.Name).HasMaxLength(int.MaxValue);
 
             // Provider Name is indexed
-            b.HasIndex(x => x.Name);
+            //b.HasIndex(x => x.Name);
         });
     }
 }

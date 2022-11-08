@@ -46,12 +46,9 @@ namespace Orders.Data.Migrations
 
                     b.HasIndex("Date");
 
-                    b.HasIndex("Number");
+                    b.HasIndex("ProviderId");
 
-                    b.HasIndex("ProviderId", "Number")
-                        .IsUnique();
-
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("Orders.Data.OrderItem", b =>
@@ -81,13 +78,9 @@ namespace Orders.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name");
-
                     b.HasIndex("OrderId");
 
-                    b.HasIndex("Unit");
-
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", (string)null);
                 });
 
             modelBuilder.Entity("Orders.Data.Provider", b =>
@@ -105,9 +98,7 @@ namespace Orders.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name");
-
-                    b.ToTable("Providers");
+                    b.ToTable("Providers", (string)null);
                 });
 
             modelBuilder.Entity("Orders.Data.Order", b =>

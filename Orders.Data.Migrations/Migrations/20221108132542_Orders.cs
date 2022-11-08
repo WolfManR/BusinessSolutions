@@ -68,19 +68,9 @@ namespace Orders.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_OrderItems_Name",
-                table: "OrderItems",
-                column: "Name");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_OrderId",
                 table: "OrderItems",
                 column: "OrderId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OrderItems_Unit",
-                table: "OrderItems",
-                column: "Unit");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Orders_Date",
@@ -88,20 +78,9 @@ namespace Orders.Data.Migrations
                 column: "Date");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Orders_Number",
+                name: "IX_Orders_ProviderId",
                 table: "Orders",
-                column: "Number");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Orders_ProviderId_Number",
-                table: "Orders",
-                columns: new[] { "ProviderId", "Number" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Providers_Name",
-                table: "Providers",
-                column: "Name");
+                column: "ProviderId");
         }
 
         /// <inheritdoc />

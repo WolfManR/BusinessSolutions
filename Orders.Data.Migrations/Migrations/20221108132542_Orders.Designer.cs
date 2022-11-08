@@ -12,7 +12,7 @@ using Orders.Data;
 namespace Orders.Data.Migrations
 {
     [DbContext(typeof(OrdersDbContext))]
-    [Migration("20221108130508_Orders")]
+    [Migration("20221108132542_Orders")]
     partial class Orders
     {
         /// <inheritdoc />
@@ -49,10 +49,7 @@ namespace Orders.Data.Migrations
 
                     b.HasIndex("Date");
 
-                    b.HasIndex("Number");
-
-                    b.HasIndex("ProviderId", "Number")
-                        .IsUnique();
+                    b.HasIndex("ProviderId");
 
                     b.ToTable("Orders");
                 });
@@ -84,11 +81,7 @@ namespace Orders.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name");
-
                     b.HasIndex("OrderId");
-
-                    b.HasIndex("Unit");
 
                     b.ToTable("OrderItems");
                 });
@@ -107,8 +100,6 @@ namespace Orders.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Name");
 
                     b.ToTable("Providers");
                 });
