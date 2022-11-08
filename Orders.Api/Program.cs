@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using Orders.Api.Contracts;
@@ -24,6 +22,22 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    using var context = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
+    if (!context.Providers.Any())
+    {
+        context.Providers.AddRange(new[]
+        {
+            new Provider(){Name = "Lorem"},
+            new Provider(){Name = "Ipsum"},
+            new Provider(){Name = "Koren"},
+            new Provider(){Name = "Laramusha"},
+        });
+        context.SaveChanges();
+    }
 }
 
 app.MapGet("orders/all", async ([FromBody] OrdersListRequest request, [FromServices] OrdersDbContext db) =>
