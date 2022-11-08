@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Orders.Api.Contracts\Orders.Api.Contracts.csproj" />
     <ProjectReference Include="..\Orders.Data.Migrations\Orders.Data.Migrations.csproj" />
     <ProjectReference Include="..\Orders.Data\Orders.Data.csproj" />
   </ItemGroup>
