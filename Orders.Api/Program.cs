@@ -68,8 +68,14 @@ app.MapGet("orders/all", async ([FromBody] OrdersListRequest request, [FromServi
 
 app.MapGet("orders/details/{orderId:int}", async ([FromRoute] int orderId, [FromServices] OrdersDbContext db) =>
 {
-    var order = await db.Orders.Include(x => x.Provider).Include(x => x.OrderItems).FirstOrDefaultAsync(x => x.Id == orderId);
+    var order = await db.Orders
+        .Include(x => x.Provider)
+        .Include(x => x.OrderItems)
+        .AsNoTracking()
+        .FirstOrDefaultAsync(x => x.Id == orderId);
+
     if (order is null) return Results.NotFound();
+
     return Results.Ok(new OrderDetailsResponse()
     {
         Number = order.Number,
