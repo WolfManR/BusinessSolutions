@@ -1,1 +1,64 @@
 ﻿@model OrdersTableViewModel
+
+<div>
+	<form class="mb-2" method="post">
+		<div class="row">
+			<div class="col-5">
+				<label class="control-label">From</label>
+				<input type="date" value="@Model.Filter.From.ToString("yyyy-MM-dd")" class="form-control"/>
+			</div>
+
+			<div class="col-5">
+				<label class="control-label">To</label>
+				<input type="date" value="@Model.Filter.To.ToString("yyyy-MM-dd")" class="form-control" />
+			</div>
+			
+			<button class="btn btn-secondary col-2">Search</button>
+		</div>
+
+		<div class="row mt-2 mb-2">
+			<div class="col-3">
+				<label class="control-label">Order Number</label>
+				<select class="form-control"></select>
+			</div>
+			<div class="col-3">
+				<label class="control-label">Provider</label>
+				<select class="form-control"></select>
+			</div>
+			<div class="col-3">
+				<label class="control-label">Order Item Name</label>
+				<select class="form-control"></select>
+			</div>
+			<div class="col-3">
+				<label class="control-label">Order Item Unit</label>
+				<select class="form-control"></select>
+			</div>
+		</div>
+	</form>
+	
+	<h5 class="mt-4">Orders</h5>
+
+	<a asp-action="Edit" class="btn btn-primary mb-2">Create New Order</a>
+
+	<table class="table table-borderless">
+		<thead>
+			<tr>
+				<th>Number</th>
+				<th>Provider</th>
+				<th>Date</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var order in Model.Orders)
+			{
+				<tr>
+					<td>@order.Number</td>
+					<td>@order.Provider</td>
+					<td>@order.Date.ToLongDateString()</td>
+					<td><a asp-action="Details" asp-route-id="@order.Id" class="btn btn-light">Details</a></td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>

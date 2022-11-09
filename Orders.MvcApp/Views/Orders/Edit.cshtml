@@ -1,7 +1,71 @@
 ﻿@model OrderViewModel
 
-@{
-	ViewBag.Title = "title";
-}
+<div>
+	<form method="post">
+		<div class="form-group">
+			<label class="control-label">Number</label>
+			<input type="text" value="@Model.Number" class="form-control"/>
+		</div>
 
-<h2>title</h2>
+		<div class="form-group">
+			<label class="control-label">Provider</label>
+			<select class="form-control"></select>
+		</div>
+
+		<div class="form-group">
+			<label class="control-label">Date</label>
+			<input type="date" value="@Model.Date.ToString("yy-MM-dd")" class="form-control" />
+		</div>
+
+		<div class="form-group mt-2">
+			<button class="btn btn-primary">Save</button>
+		</div>
+	</form>
+	
+	<h5 class="mt-5">Order Items:</h5>
+	<form class="mb-4 row">
+		<div class="col-3">
+			<label class="control-label">Name</label>
+			<input type="text"  class="form-control"/>
+		</div>
+
+		<div class="col-3">
+			<label class="control-label">Unit</label>
+			<input type="text" class="form-control" />
+		</div>
+
+		<div class="col-3">
+			<label class="control-label">Quantity</label>
+			<input type="number"  class="form-control"/>
+		</div>
+
+		<button class="btn btn-secondary col-1">Add</button>
+	</form>
+
+
+	<div>
+		<table class="table table-borderless">
+			<thead>
+			<tr>
+				<th>Name</th>
+				<th>Unit</th>
+				<th>Quantity</th>
+				<th></th>
+			</tr>
+			</thead>
+			<tbody>
+
+			@foreach (var item in Model.OrderItems)
+			{
+				<tr>
+					<td>@item.Name</td>
+					<td>@item.Unit</td>
+					<td>@item.Quantity</td>
+					<td><button>Remove</button></td>
+				</tr>
+			}
+
+			</tbody>
+		</table>
+	</div>
+</div>
