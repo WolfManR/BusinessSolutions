@@ -40,17 +40,25 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapGet("orders/all", async ([FromBody] OrdersListRequest request, [FromServices] OrdersDbContext db) =>
+app.MapPost("orders/all", async ([FromBody] OrdersListRequest request, [FromServices] OrdersDbContext db) =>
 {
-    var query = db.Orders
-        .Include(x => x.OrderItems)
-        .Include(x => x.Provider)
-        .Where(x => x.Date >= request.From && x.Date <= request.To);
+    var query = db.Orders.Where(x => x.Date >= request.From && x.Date <= request.To);
 
-    if (request.OrderItemName is not null) query = query.Where(x => x.OrderItems.Any(c => c.Name == request.OrderItemName));
-    if (request.OrderItemUnit is not null) query = query.Where(x => x.OrderItems.Any(c => c.Unit == request.OrderItemUnit));
-    if (request.Provider is not null) query = query.Where(x => x.Provider.Name == request.Provider);
     if (request.OrderNumber is not null) query = query.Where(x => x.Number == request.OrderNumber);
+
+    if (request.Provider is not null)
+    {
+        query = query
+            .Include(x => x.Provider)
+            .Where(x => x.Provider.Name == request.Provider);
+    }
+
+    if (request.OrderItemName is not null || request.OrderItemUnit is not null)
+    {
+        query = query.Include(x => x.OrderItems);
+        if (request.OrderItemName is not null) query = query.Where(x => x.OrderItems.Any(c => c.Name == request.OrderItemName));
+        if (request.OrderItemUnit is not null) query = query.Where(x => x.OrderItems.Any(c => c.Unit == request.OrderItemUnit));
+    }
 
     var orders = await query.AsNoTracking().Select(x => new OrderListItem()
     {
@@ -91,7 +99,7 @@ app.MapGet("orders/details/{orderId:int}", async ([FromRoute] int orderId, [From
     });
 }).Produces<OrderDetailsResponse>().ProducesProblem(404).WithTags("Orders");
 
-app.MapGet("orders/remove/{orderId:int}", async ([FromRoute] int orderId, [FromServices] OrdersDbContext db) =>
+app.MapDelete("orders/remove/{orderId:int}", async ([FromRoute] int orderId, [FromServices] OrdersDbContext db) =>
 {
     var order = await db.Orders.FindAsync(orderId);
     if (order is null) return Results.Ok();
@@ -100,7 +108,7 @@ app.MapGet("orders/remove/{orderId:int}", async ([FromRoute] int orderId, [FromS
     return Results.Ok();
 }).Produces(200).WithTags("Orders");
 
-app.MapGet("orders/save", async ([FromBody] SaveOrderRequest request, [FromServices] OrdersDbContext db) =>
+app.MapPost("orders/save", async ([FromBody] SaveOrderRequest request, [FromServices] OrdersDbContext db) =>
 {
     Order? order = null;
     if (request.Id > 0)
@@ -136,27 +144,27 @@ app.MapGet("orders/save", async ([FromBody] SaveOrderRequest request, [FromServi
     return Results.Ok();
 }).ProducesProblem(400).Produces(200).WithTags("Orders");
 
-app.MapGet("filter/order-numbers", ([FromServices] OrdersDbContext db) =>
+app.MapGet("filter/order-numbers", async ([FromServices] OrdersDbContext db) =>
 {
-    var filterValues = db.Orders.DistinctBy(x => x.Number).Select(x => x.Number).ToListAsync();
+    var filterValues = await db.Orders.Select(x => x.Number).Distinct().ToListAsync();
     return Results.Ok(filterValues);
 }).Produces<string[]>().WithTags("Filters");
 
-app.MapGet("filter/providers", ([FromServices] OrdersDbContext db) =>
+app.MapGet("filter/providers", async ([FromServices] OrdersDbContext db) =>
 {
-    var filterValues = db.Providers.DistinctBy(x => x.Name).Select(x => x.Name).ToListAsync();
+    var filterValues = await db.Providers.Select(x => x.Name).Distinct().ToListAsync();
     return Results.Ok(filterValues);
 }).Produces<string[]>().WithTags("Filters");
 
-app.MapGet("filter/order-items-names", ([FromServices] OrdersDbContext db) =>
+app.MapGet("filter/order-items-names", async ([FromServices] OrdersDbContext db) =>
 {
-    var filterValues = db.OrderItems.DistinctBy(x => x.Name).Select(x => x.Name).ToListAsync();
+    var filterValues = await db.OrderItems.Select(x => x.Name).Distinct().ToListAsync();
     return Results.Ok(filterValues);
 }).Produces<string[]>().WithTags("Filters");
 
-app.MapGet("filter/order-items-units", ([FromServices] OrdersDbContext db) =>
+app.MapGet("filter/order-items-units", async ([FromServices] OrdersDbContext db) =>
 {
-    var filterValues = db.OrderItems.DistinctBy(x => x.Unit).Select(x => x.Unit).ToListAsync();
+    var filterValues = await db.OrderItems.Select(x => x.Unit).Distinct().ToListAsync();
     return Results.Ok(filterValues);
 }).Produces<string[]>().WithTags("Filters");
 
