@@ -14,10 +14,12 @@ builder.Services.AddRefitClient<IOrdersApiClient>().ConfigureHttpClient((p, c) =
 builder.Services.AddRefitClient<IOrdersFiltersValuesClient>().ConfigureHttpClient((p, c) =>
 {
 	var configuration = p.GetRequiredService<IConfiguration>();
-	c.BaseAddress = new Uri(configuration.GetConnectionString(configuration["ApiProvider"]) + "/filters");
+	c.BaseAddress = new Uri(configuration.GetConnectionString(configuration["ApiProvider"]) + "/filter");
 });
 
-builder.Services.AddScoped<OrdersService>();
+builder.Services
+	.AddScoped<OrdersService>()
+	.AddScoped<FilterValuesService>();
 
 var app = builder.Build();
 

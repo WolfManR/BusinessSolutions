@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Orders.Api.Contracts;
 using Orders.MvcApp.Models;
 using Orders.MvcApp.Services;
 
@@ -14,17 +15,34 @@ public class OrdersController : Controller
 		_ordersService = ordersService;
 	}
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(OrdersTableViewModel? model, [FromServices] FilterValuesService filterValuesService)
     {
-	    var orders = await _ordersService.GetOrders(DateTime.Now.AddMonths(-1), DateTime.Now);
-        return View(new OrdersTableViewModel { Orders = orders.ToArray() });
-    }
+	    var filter = model?.Filter;
+	    OrdersListRequest request = new()
+	    {
+			From = filter?.From ?? DateTime.Now.AddMonths(-1),
+			To = filter?.To ?? DateTime.Now,
+			OrderNumber = filter?.OrdersNumber,
+			Provider = filter?.Provider,
+			OrderItemName = filter?.OrderItemsName,
+			OrderItemUnit = filter?.OrderItemsUnit
+	    };
+	    var orders = await _ordersService.GetOrders(request);
 
-    [HttpPost]
-    public async Task<IActionResult> Index(FilterViewModel model)
-    {
-	    var orders = await _ordersService.GetOrders(model.From, model.To);
-	    return View(new OrdersTableViewModel { Filter = model, Orders = orders.ToArray() });
+	    var ordersNumbers = filterValuesService.OrdersNumbers();
+	    var providers = filterValuesService.Providers();
+	    var orderItemsNames = filterValuesService.OrderItemsNames();
+	    var orderItemsUnits = filterValuesService.OrderItemsUnits();
+		
+	    await Task.WhenAll(ordersNumbers, providers, orderItemsNames, orderItemsUnits);
+	    OrdersTableViewModel vm = new() { Filter = model?.Filter ?? new(), Orders = orders.ToArray() };
+
+		ViewBag.OrdersNumbers = new SelectList(await ordersNumbers, vm.Filter.OrdersNumber);
+	    ViewBag.Providers = new SelectList(await providers, vm.Filter.Provider);
+	    ViewBag.OrderItemsNames = new SelectList(await orderItemsNames, vm.Filter.OrderItemsName);
+	    ViewBag.OrderItemsUnits = new SelectList(await orderItemsUnits, vm.Filter.OrderItemsUnit);
+
+        return View(vm);
     }
 
     public async Task<IActionResult> Details(int id)

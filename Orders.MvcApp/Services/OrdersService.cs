@@ -12,13 +12,8 @@ public class OrdersService
 		_client = client;
 	}
 
-	public async Task<IReadOnlyCollection<OrderListViewModel>> GetOrders(DateTime from, DateTime to)
+	public async Task<IReadOnlyCollection<OrderListViewModel>> GetOrders(OrdersListRequest request)
 	{
-		OrdersListRequest request = new()
-		{
-			From = from,
-			To = to
-		};
 		try
 		{
 			var response = await _client.GetOrders(request);
