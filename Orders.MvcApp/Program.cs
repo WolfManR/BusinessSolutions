@@ -1,7 +1,23 @@
+using Orders.MvcApp.Services;
+using Refit;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddRefitClient<IOrdersApiClient>().ConfigureHttpClient((p, c) =>
+{
+	var configuration = p.GetRequiredService<IConfiguration>();
+	c.BaseAddress = new Uri(configuration.GetConnectionString(configuration["ApiProvider"]) + "/orders");
+});
+builder.Services.AddRefitClient<IOrdersFiltersValuesClient>().ConfigureHttpClient((p, c) =>
+{
+	var configuration = p.GetRequiredService<IConfiguration>();
+	c.BaseAddress = new Uri(configuration.GetConnectionString(configuration["ApiProvider"]) + "/filters");
+});
+
+builder.Services.AddScoped<OrdersService>();
 
 var app = builder.Build();
 
