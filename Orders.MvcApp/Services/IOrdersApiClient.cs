@@ -8,10 +8,10 @@ public interface IOrdersApiClient
 	[Post("/all")]
 	Task<OrdersListResponse> GetOrders([Body] OrdersListRequest request);
 
-	[Get("/details/{orderId:int}")]
+	[Get("/details/{orderId}")]
 	Task<OrderDetailsResponse> GetDetails(int orderId);
 
-	[Delete("/remove/{orderId:int}")]
+	[Delete("/remove/{orderId}")]
 	Task Delete(int orderId);
 
 	[Post("/save")]
