@@ -1,128 +1,66 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Orders.MvcApp.Models;
+using Orders.MvcApp.Services;
 
 namespace Orders.MvcApp.Controllers;
 
 public class OrdersController : Controller
 {
-    public IActionResult Index()
+	private readonly OrdersService _ordersService;
+
+	public OrdersController(OrdersService ordersService)
+	{
+		_ordersService = ordersService;
+	}
+
+    public async Task<IActionResult> Index()
     {
-        return Index(new());
+	    var orders = await _ordersService.GetOrders(DateTime.Now.AddMonths(-1), DateTime.Now);
+        return View(new OrdersTableViewModel { Orders = orders.ToArray() });
     }
 
     [HttpPost]
-    public IActionResult Index(FilterViewModel model)
+    public async Task<IActionResult> Index(FilterViewModel model)
     {
-        return View(new OrdersTableViewModel()
-        {
-            Filter = model,
-            Orders = new[]
-            {
-                new OrderListViewModel()
-                {
-                    Id = 1,
-                    Number = "79f77c20-b5e7-47f7-a9e1-c1c8814ddd8e",
-                    Provider = "Lorem",
-                    Date = DateTime.Now.AddDays(-4)
-                },
-                new OrderListViewModel()
-                {
-                    Id = 2,
-                    Number = "ed908a00-f029-4a54-a2a0-91db98ca859a",
-                    Provider = "Lorem",
-                    Date = DateTime.Now.AddDays(-23)
-                },
-                new OrderListViewModel()
-                {
-                    Id = 3,
-                    Number = "c59a233f-0d83-4f32-a346-791aa0670f09",
-                    Provider = "Ipsum",
-                    Date = DateTime.Now.AddDays(-40)
-                },
-            }
-        });
+	    var orders = await _ordersService.GetOrders(model.From, model.To);
+	    return View(new OrdersTableViewModel { Filter = model, Orders = orders.ToArray() });
     }
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        return View(new OrderViewModel()
-        {
-            Id = id,
-            Number = "79f77c20-b5e7-47f7-a9e1-c1c8814ddd8e",
-            ProviderId = 1,
-            Date = DateTime.Now.AddDays(-4),
-            OrderItems = new[]
-            {
-                new OrderItemViewModel()
-                {
-                    Id = 1,
-                    Name = "Chair",
-                    Unit = "thing",
-                    Quantity = 14
-                },
-                new OrderItemViewModel()
-                {
-                    Id = 1,
-                    Name = "Wine",
-                    Unit = "bottle",
-                    Quantity = 2
-                },
-                new OrderItemViewModel()
-                {
-                    Id = 1,
-                    Name = "Textile",
-                    Unit = "metr",
-                    Quantity = 10.5m
-                },
-            }
-        });
+	    var details = await _ordersService.GetDetails(id);
+	    if (details is null)
+	    {
+		    return NotFound();
+	    }
+
+        return View(details);
     }
 
-    public IActionResult Edit(int id)
+    public async Task<IActionResult> Edit(int id)
     {
         if(id <= 0) return View(new OrderViewModel());
 
-        return View(new OrderViewModel()
+        var details = await _ordersService.GetDetails(id);
+        if (details is null)
         {
-            Id = id,
-            Number = "79f77c20-b5e7-47f7-a9e1-c1c8814ddd8e",
-            ProviderId = 1,
-            Date = DateTime.Now.AddDays(-4),
-            OrderItems = new[]
-            {
-                new OrderItemViewModel()
-                {
-                    Id = 1,
-                    Name = "Chair",
-                    Unit = "thing",
-                    Quantity = 14
-                },
-                new OrderItemViewModel()
-                {
-                    Id = 1,
-                    Name = "Wine",
-                    Unit = "bottle",
-                    Quantity = 2
-                },
-                new OrderItemViewModel()
-                {
-                    Id = 1,
-                    Name = "Textile",
-                    Unit = "metr",
-                    Quantity = 10.5m
-                },
-            }
-        });
+	        return NotFound();
+        }
+		return View(details);
     }
 
     [HttpPost]
-    public IActionResult Edit(OrderViewModel model)
+    public async Task<IActionResult> Edit(OrderViewModel model)
     {
+	    await _ordersService.Save(model);
+        // TODO: failure
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Delete()
+    public async Task<IActionResult> Delete(int id)
     {
-        return RedirectToAction(nameof(Index));
+	    await _ordersService.Delete(id);
+	    // TODO: failure
+		return RedirectToAction(nameof(Index));
     }
 }
