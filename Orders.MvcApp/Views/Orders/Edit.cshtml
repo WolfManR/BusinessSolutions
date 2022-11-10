@@ -4,17 +4,19 @@
 	<form method="post">
 		<div class="form-group">
 			<label class="control-label">Number</label>
-			<input type="text" value="@Model.Number" class="form-control"/>
+			<input asp-for="Number" type="text" value="@Model.Number" class="form-control"/>
 		</div>
 
 		<div class="form-group">
 			<label class="control-label">Provider</label>
-			<select class="form-control"></select>
+			<select id="providers" asp-for="ProviderId" class="form-control" asp-items=" @ViewBag.Providers">
+
+			</select>
 		</div>
 
 		<div class="form-group">
 			<label class="control-label">Date</label>
-			<input type="date" value="@Model.Date.ToString("yy-MM-dd")" class="form-control" />
+			<input asp-for="Date" type="date" value="@Model.Date.ToString("yy-MM-dd")" class="form-control" />
 		</div>
 
 		<div class="form-group mt-2">

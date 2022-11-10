@@ -101,4 +101,18 @@ public class OrdersService
 			// log
 		}
 	}
+
+	public async Task<IReadOnlyCollection<ProviderViewModel>> GetProviders()
+	{
+		try
+		{
+			var response = await _client.GetProviders();
+			return response.Select(x => new ProviderViewModel() { Id = x.Id, Name = x.Name }).ToList();
+		}
+		catch (Exception e)
+		{
+			// log
+			return Array.Empty<ProviderViewModel>();
+		}
+	}
 }

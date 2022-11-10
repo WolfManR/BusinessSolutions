@@ -5,15 +5,18 @@ namespace Orders.MvcApp.Services;
 
 public interface IOrdersApiClient
 {
-	[Post("/all")]
+	[Post("/orders/all")]
 	Task<OrdersListResponse> GetOrders([Body] OrdersListRequest request);
 
-	[Get("/details/{orderId}")]
+	[Get("/orders/details/{orderId}")]
 	Task<OrderDetailsResponse> GetDetails(int orderId);
 
-	[Delete("/remove/{orderId}")]
+	[Delete("/orders/remove/{orderId}")]
 	Task Delete(int orderId);
 
-	[Post("/save")]
+	[Post("/orders/save")]
 	Task Save([Body] SaveOrderRequest request);
+
+	[Get("/providers")]
+	Task<IEnumerable<ProviderItemResponse>> GetProviders();
 }

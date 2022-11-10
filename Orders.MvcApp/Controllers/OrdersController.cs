@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Orders.MvcApp.Models;
 using Orders.MvcApp.Services;
 
@@ -39,14 +40,20 @@ public class OrdersController : Controller
 
     public async Task<IActionResult> Edit(int id)
     {
-        if(id <= 0) return View(new OrderViewModel());
+	    OrderViewModel? model = null;
 
-        var details = await _ordersService.GetDetails(id);
-        if (details is null)
-        {
-	        return NotFound();
-        }
-		return View(details);
+	    if (id > 0)
+	    {
+		    model = await _ordersService.GetDetails(id);
+		    if (model is null)
+		    {
+			    return NotFound();
+		    }
+	    }
+
+	    ViewBag.Providers = new SelectList(await _ordersService.GetProviders(), nameof(ProviderViewModel.Id), nameof(ProviderViewModel.Name));
+
+	    return View(model ?? new());
     }
 
     [HttpPost]

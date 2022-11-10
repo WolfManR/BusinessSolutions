@@ -9,7 +9,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRefitClient<IOrdersApiClient>().ConfigureHttpClient((p, c) =>
 {
 	var configuration = p.GetRequiredService<IConfiguration>();
-	c.BaseAddress = new Uri(configuration.GetConnectionString(configuration["ApiProvider"]) + "/orders");
+	c.BaseAddress = new Uri(configuration.GetConnectionString(configuration["ApiProvider"]));
 });
 builder.Services.AddRefitClient<IOrdersFiltersValuesClient>().ConfigureHttpClient((p, c) =>
 {
