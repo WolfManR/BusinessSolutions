@@ -50,7 +50,7 @@ public class OrdersService
 					Name = x.Name,
 					Unit = x.Unit,
 					Quantity = x.Quantity
-				}).ToArray()
+				}).ToList()
 			};
 		}
 		catch (Exception e)

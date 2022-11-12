@@ -9,10 +9,12 @@ namespace Orders.MvcApp.Controllers;
 public class OrdersController : Controller
 {
 	private readonly OrdersService _ordersService;
+	private readonly OrderItemsStorage _orderItemsStorage;
 
-	public OrdersController(OrdersService ordersService)
+	public OrdersController(OrdersService ordersService, OrderItemsStorage orderItemsStorage)
 	{
 		_ordersService = ordersService;
+		_orderItemsStorage = orderItemsStorage;
 	}
 
     public async Task<IActionResult> Index(OrdersTableViewModel? model, [FromServices] FilterValuesService filterValuesService)
@@ -71,12 +73,19 @@ public class OrdersController : Controller
 
 	    ViewBag.Providers = new SelectList(await _ordersService.GetProviders(), nameof(ProviderViewModel.Id), nameof(ProviderViewModel.Name));
 
+		if (model is not null)
+	    {
+		    _orderItemsStorage.Items = model.OrderItems.ToList();
+	    }
+
 	    return View(model ?? new());
     }
 
     [HttpPost]
-    public async Task<IActionResult> Edit(OrderViewModel model)
+	[ActionName(nameof(Edit))]
+    public async Task<IActionResult> SaveOrderChanges(OrderViewModel model)
     {
+	    model.OrderItems = _orderItemsStorage.Items;
 	    await _ordersService.Save(model);
         // TODO: failure
         return RedirectToAction(nameof(Index));
@@ -87,5 +96,17 @@ public class OrdersController : Controller
 	    await _ordersService.Delete(id);
 	    // TODO: failure
 		return RedirectToAction(nameof(Index));
+    }
+	
+    public IActionResult AddOrderItemToStorage(OrderItemViewModel model)
+    {
+		_orderItemsStorage.AddItem(model);
+		return Json(model);
+    }
+	
+    public IActionResult RemovedOrderItemFromStorage(OrderItemViewModel model)
+    {
+		_orderItemsStorage.RemoveItem(model);
+		return Ok();
     }
 }

@@ -6,6 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddRefitClient<IOrdersApiClient>().ConfigureHttpClient((p, c) =>
 {
 	var configuration = p.GetRequiredService<IConfiguration>();
@@ -19,7 +21,8 @@ builder.Services.AddRefitClient<IOrdersFiltersValuesClient>().ConfigureHttpClien
 
 builder.Services
 	.AddScoped<OrdersService>()
-	.AddScoped<FilterValuesService>();
+	.AddScoped<FilterValuesService>()
+	.AddScoped<OrderItemsStorage>();
 
 var app = builder.Build();
 
