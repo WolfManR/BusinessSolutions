@@ -86,15 +86,24 @@ public class OrdersController : Controller
     public async Task<IActionResult> SaveOrderChanges(OrderViewModel model)
     {
 	    model.OrderItems = _orderItemsStorage.Items;
-	    await _ordersService.Save(model);
-        // TODO: failure
+	    if (!await _ordersService.Save(model))
+	    {
+		    ViewBag.Providers = new SelectList(await _ordersService.GetProviders(), nameof(ProviderViewModel.Id), nameof(ProviderViewModel.Name));
+			return View(nameof(Edit), model);
+	    }  
+
+	    _orderItemsStorage.Clear();
+        
         return RedirectToAction(nameof(Index));
     }
 
     public async Task<IActionResult> Delete(int id)
     {
-	    await _ordersService.Delete(id);
-	    // TODO: failure
+	    if (!await _ordersService.Delete(id))
+	    {
+		    return Problem();
+	    }
+
 		return RedirectToAction(nameof(Index));
     }
 	

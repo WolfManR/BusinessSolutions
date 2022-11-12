@@ -59,19 +59,21 @@ public class OrdersService
 			return null;
 		}
 	}
-	public async Task Delete(int orderId)
+	public async Task<bool> Delete(int orderId)
 	{
 		try
 		{
 			await _client.Delete(orderId);
-			
+			return true;
+
 		}
 		catch (Exception e)
 		{
 			// log
+			return false;
 		}
 	}
-	public async Task Save(OrderViewModel order)
+	public async Task<bool> Save(OrderViewModel order)
 	{
 		SaveOrderRequest request = new()
 		{
@@ -90,10 +92,12 @@ public class OrdersService
 		try
 		{
 			await _client.Save(request);
+			return true;
 		}
 		catch (Exception e)
 		{
 			// log
+			return false;
 		}
 	}
 
