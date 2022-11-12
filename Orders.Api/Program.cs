@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-
+using Orders.Api;
 using Orders.Api.Contracts;
 using Orders.Data;
 using Orders.Data.Migrations;
@@ -13,7 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddOrdersDatabase();
+builder.Services
+	.AddOrdersDatabase()
+	.AddScoped<OrdersStorage>()
+	.AddScoped<ProvidersStorage>()
+	.AddScoped<OrdersFilterValuesStorage>();
 
 var app = builder.Build();
 
@@ -40,33 +43,9 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapPost("orders/all", async ([FromBody] OrdersListRequest request, [FromServices] OrdersDbContext db) =>
+app.MapPost("orders/all", async ([FromBody] OrdersListRequest request, [FromServices] OrdersStorage storage) =>
 {
-    var query = db.Orders.Where(x => x.Date >= request.From && x.Date <= request.To);
-
-    if (request.OrderNumber is not null) query = query.Where(x => x.Number == request.OrderNumber);
-
-    if (request.Provider is not null)
-    {
-        query = query
-            .Include(x => x.Provider)
-            .Where(x => x.Provider.Name == request.Provider);
-    }
-
-    if (request.OrderItemName is not null || request.OrderItemUnit is not null)
-    {
-        query = query.Include(x => x.OrderItems);
-        if (request.OrderItemName is not null) query = query.Where(x => x.OrderItems.Any(c => c.Name == request.OrderItemName));
-        if (request.OrderItemUnit is not null) query = query.Where(x => x.OrderItems.Any(c => c.Unit == request.OrderItemUnit));
-    }
-
-    var orders = await query.AsNoTracking().Select(x => new OrderListItem()
-    {
-        Id = x.Id,
-        Date = x.Date,
-        Number = x.Number,
-        Provider = x.Provider.Name
-    }).ToListAsync();
+	var orders = await storage.GetOrders(request);
 
     return Results.Ok(new OrdersListResponse()
     {
@@ -74,13 +53,9 @@ app.MapPost("orders/all", async ([FromBody] OrdersListRequest request, [FromServ
     });
 }).Produces<OrdersListResponse>().WithTags("Orders");
 
-app.MapGet("orders/details/{orderId:int}", async ([FromRoute] int orderId, [FromServices] OrdersDbContext db) =>
+app.MapGet("orders/details/{orderId:int}", async ([FromRoute] int orderId, [FromServices] OrdersStorage storage) =>
 {
-    var order = await db.Orders
-        .Include(x => x.Provider)
-        .Include(x => x.OrderItems)
-        .AsNoTracking()
-        .FirstOrDefaultAsync(x => x.Id == orderId);
+	var order = await storage.GetOrder(orderId);
 
     if (order is null) return Results.NotFound();
 
@@ -99,16 +74,13 @@ app.MapGet("orders/details/{orderId:int}", async ([FromRoute] int orderId, [From
     });
 }).Produces<OrderDetailsResponse>().ProducesProblem(404).WithTags("Orders");
 
-app.MapDelete("orders/remove/{orderId:int}", async ([FromRoute] int orderId, [FromServices] OrdersDbContext db) =>
+app.MapDelete("orders/remove/{orderId:int}", async ([FromRoute] int orderId, [FromServices] OrdersStorage storage) =>
 {
-    var order = await db.Orders.FindAsync(orderId);
-    if (order is null) return Results.Ok();
-    db.Orders.Remove(order);
-    await db.SaveChangesAsync();
+	await storage.RemoveOrder(orderId);
     return Results.Ok();
 }).Produces(200).WithTags("Orders");
 
-app.MapPost("orders/save", async ([FromBody] SaveOrderRequest request, [FromServices] OrdersDbContext db) =>
+app.MapPost("orders/save", async ([FromBody] SaveOrderRequest request, [FromServices] OrdersStorage storage) =>
 {
 	var isAnyOrderItemHasSameNameAsOrderNumber = request.OrderItems.Any(x => x.Name == request.Number);
 	if (isAnyOrderItemHasSameNameAsOrderNumber)
@@ -116,76 +88,45 @@ app.MapPost("orders/save", async ([FromBody] SaveOrderRequest request, [FromServ
 		return Results.BadRequest("Order items cannot be named as order number");
 	}
 
-	var isOrderWithProviderAndNumberExist = await db.Orders
-		.Include(x => x.Provider)
-		.AnyAsync(x => x.Provider.Id == request.ProviderId && x.Number == request.Number);
-	if (request.Id == default && isOrderWithProviderAndNumberExist)
+	if (request.Id == default && await storage.IsOrderWithProviderAndNumberExist(request.ProviderId, request.Number))
 	{
 		return Results.BadRequest("Order for same provider with same number already exist");
 	}
 
-    Order? order = null;
-    if (request.Id > 0)
-    {
-        order = await db.Orders.Include(x => x.Provider).Include(x => x.OrderItems).FirstOrDefaultAsync(x => x.Id == request.Id);
-    }
-
-    if (order is null) order = new();
-    var provider = await db.Providers.FindAsync(request.ProviderId);
-    if (provider is null) return Results.BadRequest();
-
-    order.Number = request.Number;
-    order.Date = request.Date;
-    order.Provider = provider;
-
-    order.OrderItems.Clear();
-
-    foreach (var item in request.OrderItems)
-    {
-        order.OrderItems.Add(new OrderItem()
-        {
-            Id = item.Id,
-            Unit = item.Unit,
-            Name = item.Name,
-            Quantity = item.Quantity,
-            Order = order
-        });
-    }
-
-    db.Orders.Update(order);
-    await db.SaveChangesAsync();
+	var result = await storage.AddUpdateOrder(request);
+	if (!result) return Results.BadRequest();
 
     return Results.Ok();
 }).ProducesProblem(400).Produces(200).WithTags("Orders");
 
-app.MapGet("filter/order-numbers", async ([FromServices] OrdersDbContext db) =>
+app.MapGet("filter/order-numbers", async ([FromServices] OrdersFilterValuesStorage storage) =>
 {
-    var filterValues = await db.Orders.Select(x => x.Number).Distinct().ToListAsync();
-    return Results.Ok(filterValues);
+	var data = await storage.OrdersNumbers();
+    return Results.Ok(data);
 }).Produces<string[]>().WithTags("Filters");
 
-app.MapGet("filter/providers", async ([FromServices] OrdersDbContext db) =>
+app.MapGet("filter/providers", async ([FromServices] OrdersFilterValuesStorage storage) =>
 {
-    var filterValues = await db.Providers.Select(x => x.Name).Distinct().ToListAsync();
-    return Results.Ok(filterValues);
+    var data = await storage.Providers();
+    return Results.Ok(data);
 }).Produces<string[]>().WithTags("Filters");
 
-app.MapGet("filter/order-items-names", async ([FromServices] OrdersDbContext db) =>
+app.MapGet("filter/order-items-names", async ([FromServices] OrdersFilterValuesStorage storage) =>
 {
-    var filterValues = await db.OrderItems.Select(x => x.Name).Distinct().ToListAsync();
-    return Results.Ok(filterValues);
+	var data = await storage.OrderItemsNames();
+    return Results.Ok(data);
 }).Produces<string[]>().WithTags("Filters");
 
-app.MapGet("filter/order-items-units", async ([FromServices] OrdersDbContext db) =>
+app.MapGet("filter/order-items-units", async ([FromServices] OrdersFilterValuesStorage storage) =>
 {
-    var filterValues = await db.OrderItems.Select(x => x.Unit).Distinct().ToListAsync();
-    return Results.Ok(filterValues);
+	var data = await storage.OrderItemsUnits();
+    return Results.Ok(data);
 }).Produces<string[]>().WithTags("Filters");
 
-app.MapGet("providers", async ([FromServices] OrdersDbContext db) =>
+app.MapGet("providers", async ([FromServices] ProvidersStorage storage) =>
 {
-    var filterValues = await db.Providers.Select(x => new ProviderItemResponse(){Id = x.Id, Name = x.Name}).ToListAsync();
-    return Results.Ok(filterValues);
+	var data = await storage.GetProviders();
+    return Results.Ok(data);
 }).Produces<ProviderItemResponse[]>().WithTags("Providers");
 
 app.Run();
