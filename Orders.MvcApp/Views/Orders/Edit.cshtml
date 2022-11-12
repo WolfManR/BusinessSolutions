@@ -1,0 +1,159 @@
+﻿@model OrderViewModel
+
+<div>
+	<form method="post">
+		<div class="form-group">
+			<label class="control-label">Number</label>
+			<input asp-for="Number" type="text" value="@Model.Number" class="form-control"/>
+		</div>
+
+		<div class="form-group">
+			<label class="control-label">Provider</label>
+			<select id="providers" asp-for="ProviderId" class="form-control" asp-items=" @ViewBag.Providers">
+
+			</select>
+		</div>
+
+		<div class="form-group">
+			<label class="control-label">Date</label>
+			<input asp-for="Date" type="date" value="@Model.Date.ToString("yyyy-MM-dd")" class="form-control" />
+		</div>
+
+		<div class="form-group mt-2">
+			<button class="btn btn-primary">Save</button>
+		</div>
+	</form>
+
+	
+	<div>
+		<h5 class="mt-5">Order Items:</h5>
+
+		<div class="col-3">
+			<label class="control-label">Name</label>
+			<input id="item-name" type="text" class="form-control"/>
+		</div>
+
+		<div class="col-3">
+			<label class="control-label">Unit</label>
+			<input id="item-unit" type="text" class="form-control"/>
+		</div>
+
+		<div class="col-3">
+			<label class="control-label">Quantity</label>
+			<input id="item-quantity" type="number" class="form-control"/>
+		</div>
+
+		<button class="btn btn-secondary col-1" onclick="addOrderItem()">Add</button>
+	</div>
+
+	<div>
+		<table id="order-items" class="table table-borderless">
+			<thead>
+			<tr>
+				<th>Name</th>
+				<th>Unit</th>
+				<th>Quantity</th>
+				<th></th>
+			</tr>
+			</thead>
+			<tbody>
+
+			@foreach (var item in Model.OrderItems)
+			{
+				<tr class="order-item">
+					<td>@item.Name</td>
+					<td>@item.Unit</td>
+					<td>@item.Quantity</td>
+					<td><button onclick="removeOrderItem(this)">Remove</button></td>
+				</tr>
+			}
+
+			</tbody>
+		</table>
+	</div>
+</div>
+
+@section Scripts{
+	<script>
+		const addOrderItem = () => {
+			let name = $("#item-name").val();
+			let unit = $("#item-unit").val();
+			let quantity = $("#item-quantity").val();
+
+			$.ajax({
+				type: "POST",
+				url: "@Url.Action("AddOrderItemToStorage")",
+				dataType: "json",
+				data: { model: { name, unit, quantity } },
+				success: function(result) {
+					let row = findItemRow(result.name, result.unit);
+					if (row) {
+						let quantityCell = $(row).find("td:eq(2)");
+						let rowQuantity = Number(quantityCell.html());
+						let quantity = rowQuantity + result.quantity;
+						quantityCell.html(quantity);
+						return;
+					}
+
+					AddNewOrderItem(result.name, result.unit, result.quantity);
+				},
+				error: function(req, status, error) {
+					console.log({ req, status, error });
+				}
+			});
+		};
+
+		const removeOrderItem = (button) => {
+			var row = $(button).closest("TR");
+			let rowName = $("TD", row).eq(0).html();
+			let rowUnit = $("TD", row).eq(1).html();
+
+			$.ajax({
+				type: "POST",
+				url: "@Url.Action("RemovedOrderItemFromStorage")",
+				data: { model: { name: rowName, unit: rowUnit, quantity: 0 } },
+				success: function() {
+					row.remove();
+				},
+				error: function(req, status, error) {
+					console.log({ req, status, error });
+				}
+			});
+		};
+
+		const findItemRow = (itemName, itemUnit) => {
+			let rows = $("order-items").find(".order-item");
+			for (const row in rows) {
+				let rowName = $("TD", row).eq(0).html();
+				let rowUnit = $("TD", row).eq(1).html();
+				if (rowName === itemName && rowUnit === itemUnit) {
+					return row;
+				}
+			}
+			return null;
+		}
+
+		const AddNewOrderItem = (name, unit, quantity) => {
+			let tBody = $("#order-items > TBODY")[0];
+		
+			let row = tBody.insertRow(-1);
+			row.classList.add("order-item");
+
+			let cell = $(row.insertCell(-1));
+			cell.html(name);
+		
+			cell = $(row.insertCell(-1));
+			cell.html(unit);
+		
+			cell = $(row.insertCell(-1));
+			cell.html(quantity);
+		
+			cell = $(row.insertCell(-1));
+			let btnRemove = $("<input />");
+			btnRemove.attr("type", "button");
+			btnRemove.attr("onclick", "removeOrderItem(this);");
+			btnRemove.val("Remove");
+			cell.append(btnRemove);
+		}
+	</script>
+}

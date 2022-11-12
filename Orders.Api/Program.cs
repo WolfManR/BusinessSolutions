@@ -168,4 +168,10 @@ app.MapGet("filter/order-items-units", async ([FromServices] OrdersDbContext db)
     return Results.Ok(filterValues);
 }).Produces<string[]>().WithTags("Filters");
 
+app.MapGet("providers", async ([FromServices] OrdersDbContext db) =>
+{
+    var filterValues = await db.Providers.Select(x => new ProviderItemResponse(){Id = x.Id, Name = x.Name}).ToListAsync();
+    return Results.Ok(filterValues);
+}).Produces<ProviderItemResponse[]>().WithTags("Providers");
+
 app.Run();
