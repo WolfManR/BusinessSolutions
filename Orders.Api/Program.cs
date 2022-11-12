@@ -110,6 +110,20 @@ app.MapDelete("orders/remove/{orderId:int}", async ([FromRoute] int orderId, [Fr
 
 app.MapPost("orders/save", async ([FromBody] SaveOrderRequest request, [FromServices] OrdersDbContext db) =>
 {
+	var isAnyOrderItemHasSameNameAsOrderNumber = request.OrderItems.Any(x => x.Name == request.Number);
+	if (isAnyOrderItemHasSameNameAsOrderNumber)
+	{
+		return Results.BadRequest("Order items cannot be named as order number");
+	}
+
+	var isOrderWithProviderAndNumberExist = await db.Orders
+		.Include(x => x.Provider)
+		.AnyAsync(x => x.Provider.Id == request.ProviderId && x.Number == request.Number);
+	if (request.Id == default && isOrderWithProviderAndNumberExist)
+	{
+		return Results.BadRequest("Order for same provider with same number already exist");
+	}
+
     Order? order = null;
     if (request.Id > 0)
     {
